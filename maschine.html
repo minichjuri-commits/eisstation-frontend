@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Eisstation - Maschine</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <div class="logo">
+    <span class="emoji">🍦</span>
+    <div><h1 class="font-display">Eisstation</h1><p>Internes Bestellsystem - nur für Personal</p></div>
+  </div>
+  <span class="small font-mono" id="active-count"></span>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main>
+  <div class="row" style="margin-bottom:16px;flex-wrap:wrap;">
+    <h2 class="font-display" id="machine-title"></h2>
+    <div class="row" style="gap:8px;width:auto;">
+      <input id="rename-input" placeholder="Name ändern" style="width:160px;" />
+      <button class="btn btn-ghost" id="toggle-machine"></button>
+    </div>
+  </div>
+  <div id="inactive-banner"></div>
+  <div id="items-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;"></div>
+  <div style="margin-top:24px;">
+    <h4 class="font-display small" style="color:var(--text-dim);">Zuletzt fertiggestellt</h4>
+    <div class="stack" id="done-list"></div>
+  </div>
+</main>
+<script src="/js/config.js"></script>
+<script src="/js/auth-gate.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/maschine.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Eisstation - Kasse</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<header class="app-header">
+  <div class="logo">
+    <span class="emoji">🍦</span>
+    <div><h1 class="font-display">Eisstation</h1><p>Internes Bestellsystem - nur für Personal</p></div>
+  </div>
+  <span class="small font-mono" id="order-count"></span>
+</header>
+<nav class="tabs" id="tabs"></nav>
+<main>
+  <div class="grid grid-2col">
+    <div>
+      <h2 class="font-display">Sorte wählen</h2>
+      <p class="small">Für den Kunden antippen, um zur Bestellung hinzuzufügen</p>
+      <div class="flavor-grid" id="flavor-grid"></div>
+      <button class="btn btn-ghost" id="toggle-admin" style="margin-top:16px;">Sorten &amp; Preise verwalten</button>
+      <div class="panel hidden" id="flavor-admin" style="margin-top:12px;"></div>
+      <h3 class="font-display" style="margin-top:32px;">Letzte Bestellungen</h3>
+      <p class="small" style="margin-top:0;">Zum Öffnen anklicken (QR-Code, Telefonnummer, Stornieren)</p>
+      <div class="stack" id="recent-orders"></div>
+    </div>
+    <div>
+      <div class="panel-alt ticket" id="cart-panel"></div>
+      <div class="panel" id="machine-overview" style="margin-top:16px;"></div>
+      <div class="panel" id="queue-overview" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay hidden" id="qr-modal" onclick="if(event.target===this) this.classList.add('hidden')">
+  <div class="panel-alt ticket" style="max-width:320px;width:100%;text-align:center;">
+    <p class="small">Bestellung aufgenommen</p>
+    <p class="font-mono" style="font-size:24px;font-weight:600;margin:4px 0;" id="qr-order-id"></p>
+    <p class="font-mono small" id="qr-order-total"></p>
+    <div style="background:#fff;width:160px;height:160px;margin:12px auto;display:flex;align-items:center;justify-content:center;border-radius:6px;">
+      <img id="qr-image" width="150" height="150" alt="QR Code" />
+    </div>
+    <p class="small">Kunde scannt den Code, gibt seine Telefonnummer ein und erhält per SMS eine Bestellbestätigung sowie eine Nachricht bei Fertigstellung.</p>
+    <p class="small font-mono" style="word-break:break-all;"><a id="qr-link" href="#" target="_blank" rel="noopener"></a></p>
+    <button class="btn btn-amber" style="width:100%;margin-top:8px;" onclick="document.getElementById('qr-modal').classList.add('hidden')">Schließen</button>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="detail-modal" onclick="if(event.target===this) this.classList.add('hidden')">
+  <div class="panel-alt ticket" style="max-width:420px;width:100%;max-height:85vh;overflow:auto;" id="detail-body" onclick="event.stopPropagation()"></div>
+</div>
+
+<script src="/js/config.js"></script>
+<script src="/js/auth-gate.js"></script>
+<script src="/js/nav.js"></script>
+<script src="/js/kasse.js"></script>
+</body>
+</html>
