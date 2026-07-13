@@ -1,10 +1,3 @@
-// Login fuer den Personal-Bereich. Da Frontend (Vercel) und Backend (Render)
-// unterschiedliche Adressen sind, kann der Browser keinen automatischen
-// Login-Dialog mehr anzeigen (das ging nur, solange alles auf demselben
-// Server lief) - stattdessen zeigt dieses Skript ein eigenes Login-Feld und
-// prueft die Eingabe direkt gegen die Backend-API. Die Zugangsdaten werden
-// nur fuer die Dauer des Browser-Tabs gespeichert (sessionStorage).
-
 function getStoredAuth() {
   return sessionStorage.getItem('eisstation_auth');
 }
@@ -12,20 +5,35 @@ function authHeader() {
   const t = getStoredAuth();
   return t ? { Authorization: 'Basic ' + t } : {};
 }
+
+// btoa() kann nur "Latin1"-Zeichen kodieren. Enthaelt Benutzername oder
+// Passwort Umlaute, Sonderzeichen oder Emojis, wuerde btoa() sonst mit
+// einem Fehler abbrechen (und der Login-Button wuerde scheinbar gar nichts
+// tun, ohne Fehlermeldung). Dieser Umweg macht daraus eine korrekte
+// UTF-8-Kodierung, die mit beliebigen Zeichen funktioniert.
+function toBase64Utf8(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
 async function testAuth(token) {
   try {
     const res = await fetch(API_BASE + '/api/machines', { headers: { Authorization: 'Basic ' + token } });
-    return res.ok;
+    if (res.status === 401) return { ok: false, reason: 'auth' };
+    if (!res.ok) return { ok: false, reason: 'server' };
+    return { ok: true };
   } catch (e) {
-    return false;
+    return { ok: false, reason: 'network' };
   }
 }
 
 async function requireStaffLogin(onReady) {
   const existing = getStoredAuth();
-  if (existing && (await testAuth(existing))) {
-    onReady();
-    return;
+  if (existing) {
+    const result = await testAuth(existing);
+    if (result.ok) {
+      onReady();
+      return;
+    }
   }
   sessionStorage.removeItem('eisstation_auth');
   showLoginOverlay(onReady);
@@ -42,25 +50,36 @@ function showLoginOverlay(onReady) {
       <input id="login-user" style="width:100%;margin:4px 0 10px;" />
       <label class="small">Passwort</label>
       <input id="login-pass" type="password" style="width:100%;margin:4px 0 10px;" />
-      <p id="login-error" class="small" style="color:#D9637E;min-height:16px;"></p>
+      <p id="login-error" class="small" style="color:#D9637E;min-height:32px;"></p>
       <button class="btn btn-amber" style="width:100%;" id="login-submit">Anmelden</button>
     </div>
   `;
   document.body.appendChild(overlay);
 
   async function submit() {
-    const user = document.getElementById('login-user').value;
-    const pass = document.getElementById('login-pass').value;
-    const token = btoa(user + ':' + pass);
-    document.getElementById('login-error').textContent = 'Prüfe...';
-    const ok = await testAuth(token);
-    if (!ok) {
-      document.getElementById('login-error').textContent = 'Benutzername oder Passwort falsch (oder Backend nicht erreichbar).';
-      return;
+    const errEl = document.getElementById('login-error');
+    try {
+      const user = document.getElementById('login-user').value;
+      const pass = document.getElementById('login-pass').value;
+      const token = toBase64Utf8(user + ':' + pass);
+      errEl.textContent = 'Prüfe...';
+      const result = await testAuth(token);
+      if (!result.ok) {
+        if (result.reason === 'network') {
+          errEl.textContent = 'Backend nicht erreichbar. Falls es länger nicht benutzt wurde, kann das Aufwachen 30-60 Sekunden dauern - kurz warten und nochmal versuchen.';
+        } else if (result.reason === 'auth') {
+          errEl.textContent = 'Benutzername oder Passwort falsch.';
+        } else {
+          errEl.textContent = 'Unerwarteter Fehler vom Backend (Status nicht ok). Bitte Render-Log prüfen.';
+        }
+        return;
+      }
+      sessionStorage.setItem('eisstation_auth', token);
+      document.body.removeChild(overlay);
+      onReady();
+    } catch (e) {
+      errEl.textContent = 'Unerwarteter Fehler: ' + e.message;
     }
-    sessionStorage.setItem('eisstation_auth', token);
-    document.body.removeChild(overlay);
-    onReady();
   }
 
   document.getElementById('login-submit').addEventListener('click', submit);

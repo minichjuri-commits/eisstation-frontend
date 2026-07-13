@@ -29,7 +29,8 @@ function deriveOrderStatus(order) {
   return 'offen';
 }
 function orderTotal(order) {
-  return order.items.filter((i) => i.status !== 'storniert').reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const gross = order.items.filter((i) => i.status !== 'storniert').reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  return Math.max(0, gross - (Number(order.discount) || 0));
 }
 async function ensureFlavors() {
   if (!flavorsCache) flavorsCache = await api('/api/public/flavors');
@@ -179,6 +180,11 @@ async function renderAll(order) {
     </div>
     ${pickupBanner}
     ${groupRows}
+    ${
+      order.discount > 0
+        ? `<div class="row" style="padding-top:4px;"><span class="small">Rabatt</span><span class="font-mono small" style="color:#7FB77E;">-${euro(order.discount)}</span></div>`
+        : ''
+    }
     <div class="row" style="border-top:1px solid var(--border);padding-top:8px;margin:12px 0;">
       <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(orderTotal(order))}</span>
     </div>

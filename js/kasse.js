@@ -1,5 +1,7 @@
 const state = { flavors: [], machines: [], orders: [], cart: {} };
 let expandedQueue = null;
+let discountActive = false;
+let discountAmount = 1;
 
 function euro(n) { return (Number(n) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }); }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
@@ -15,7 +17,8 @@ function pillHtml(status) {
   return `<span class="pill" style="background:${m.color}22;color:${m.color};">${m.label}</span>`;
 }
 function orderTotal(order) {
-  return order.items.filter((i) => i.status !== 'storniert').reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  const gross = order.items.filter((i) => i.status !== 'storniert').reduce((s, i) => s + i.qty * i.unitPrice, 0);
+  return Math.max(0, gross - (Number(order.discount) || 0));
 }
 function deriveOrderStatus(order) {
   const relevant = order.items.filter((i) => i.status !== 'storniert');
@@ -89,7 +92,8 @@ function renderCart() {
   const items = Object.entries(state.cart)
     .map(([flavorId, qty]) => ({ flavorId, qty, flavor: state.flavors.find((f) => f.id === flavorId) }))
     .filter((i) => i.flavor);
-  const total = items.reduce((s, i) => s + i.qty * i.flavor.price, 0);
+  const grossTotal = items.reduce((s, i) => s + i.qty * i.flavor.price, 0);
+  const netTotal = Math.max(0, grossTotal - (discountActive ? discountAmount : 0));
   const anyActive = state.machines.some((m) => m.active);
   el.innerHTML = `
     <div class="row"><h3 class="font-display">Aktuelle Bestellung</h3><span class="small font-mono">${items.reduce((s, i) => s + i.qty, 0)} Stk.</span></div>
@@ -111,21 +115,41 @@ function renderCart() {
             )
             .join('')
     }
+    <div class="row" style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+      <span class="small">Rabatt</span>
+      <span class="row" style="gap:6px;width:auto;">
+        <input type="number" min="0" step="0.5" value="${discountAmount}" style="width:70px;" class="font-mono" onchange="setDiscountAmount(this.value)" />
+        <button class="btn btn-ghost" style="padding:4px 10px;" onclick="toggleDiscount()">${discountActive ? 'Entfernen' : 'Anwenden'}</button>
+      </span>
+    </div>
+    ${discountActive ? `<div class="row" style="margin-top:4px;"><span class="small">Rabatt aktiv</span><span class="font-mono small" style="color:#7FB77E;">-${euro(discountAmount)}</span></div>` : ''}
     <div class="row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;">
-      <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(total)}</span>
+      <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(netTotal)}</span>
     </div>
     <button class="btn ${items.length && anyActive ? 'btn-amber' : ''}" style="width:100%;margin-top:12px;" ${items.length && anyActive ? '' : 'disabled'} onclick="submitOrder()">
       ${anyActive ? 'Bestellung aufgeben →' : 'Keine Maschine aktiv'}
     </button>
   `;
 }
+function toggleDiscount() {
+  discountActive = !discountActive;
+  renderCart();
+}
+function setDiscountAmount(value) {
+  const v = parseFloat(value);
+  discountAmount = isNaN(v) || v < 0 ? 0 : v;
+  renderCart();
+}
 
 async function submitOrder() {
   const items = Object.entries(state.cart).map(([flavorId, qty]) => ({ flavorId, qty }));
   if (items.length === 0) return;
   try {
-    const data = await api('/api/orders', { method: 'POST', body: JSON.stringify({ items }) });
+    const discount = discountActive ? discountAmount : 0;
+    const data = await api('/api/orders', { method: 'POST', body: JSON.stringify({ items, discount }) });
     state.cart = {};
+    discountActive = false;
+    discountAmount = 1;
     showQrModal(data.order, data.qrImageUrl, data.qrTargetUrl);
     loadAll();
   } catch (e) {
@@ -153,22 +177,33 @@ function renderFlavorAdmin() {
         .map(
           (f) => `
         <div class="row" style="gap:8px;">
-          <span class="dot" style="background:${f.color};flex-shrink:0;"></span>
+          <input type="color" value="${f.color}" style="width:32px;height:32px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;" onchange="updateFlavor('${f.id}', {color:this.value})" />
           <input value="${escapeHtml(f.name)}" style="flex:1;" onchange="updateFlavor('${f.id}', {name:this.value})" />
           <input type="number" min="0" step="0.5" value="${f.price}" style="width:80px;" class="font-mono" onchange="updateFlavor('${f.id}', {price:this.value})" />
           <span class="small">€</span>
+          <button class="btn btn-ghost" style="padding:4px 8px;color:#D9637E;" onclick="deleteFlavor('${f.id}','${escapeHtml(f.name).replace(/'/g, '')}')" title="Sorte entfernen">🗑</button>
         </div>`
         )
         .join('')}
     </div>
     <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;">
       <div class="row" style="gap:8px;">
+        <input type="color" id="new-flavor-color" value="#E8A33D" style="width:32px;height:32px;padding:0;border:none;background:none;flex-shrink:0;cursor:pointer;" />
         <input id="new-flavor-name" placeholder="Sortenname" style="flex:1;" />
         <input id="new-flavor-price" type="number" min="0" step="0.5" value="10" style="width:80px;" class="font-mono" />
         <button class="btn btn-amber" onclick="addFlavor()">+ Sorte</button>
       </div>
     </div>
   `;
+}
+async function deleteFlavor(id, name) {
+  if (!confirm(`Sorte "${name}" wirklich entfernen? Bereits aufgenommene Bestellungen bleiben davon unberührt.`)) return;
+  try {
+    await api('/api/flavors/' + id, { method: 'DELETE' });
+    await loadAll();
+  } catch (e) {
+    alert(e.message);
+  }
 }
 async function updateFlavor(id, patch) {
   try {
@@ -181,9 +216,10 @@ async function updateFlavor(id, patch) {
 async function addFlavor() {
   const name = document.getElementById('new-flavor-name').value.trim();
   const price = document.getElementById('new-flavor-price').value;
+  const color = document.getElementById('new-flavor-color').value;
   if (!name) return;
   try {
-    await api('/api/flavors', { method: 'POST', body: JSON.stringify({ name, price }) });
+    await api('/api/flavors', { method: 'POST', body: JSON.stringify({ name, price, color }) });
     await loadAll();
   } catch (e) {
     alert(e.message);
@@ -204,6 +240,7 @@ function renderMachinePanel() {
           ${!m.active ? '<span class="pill" style="background:#D9637E22;color:#D9637E;">aus</span>' : ''}
           <span class="small font-mono">${m.openCount} offen</span>
           <button class="btn btn-ghost" style="padding:4px 8px;" onclick="toggleMachine(${m.id}, ${!m.active})">${m.active ? '⏻ Aus' : '⏻ An'}</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;color:#D9637E;" onclick="deleteMachine(${m.id},'${escapeHtml(m.name).replace(/'/g, '')}')" title="Maschine entfernen">🗑</button>
         </div>`
         )
         .join('')}
@@ -211,6 +248,15 @@ function renderMachinePanel() {
     <button class="btn btn-ghost" style="margin-top:10px;width:100%;" onclick="addMachine()">+ Maschine hinzufügen</button>
     <p class="small" style="margin-top:8px;">Jedes einzelne Stück wird der aktiven Maschine mit der geringsten Auslastung zugewiesen.</p>
   `;
+}
+async function deleteMachine(id, name) {
+  if (!confirm(`Maschine "${name}" wirklich entfernen? Offene Artikel werden vorher auf andere Maschinen verteilt.`)) return;
+  try {
+    await api('/api/machines/' + id, { method: 'DELETE' });
+    await loadAll();
+  } catch (e) {
+    alert(e.message);
+  }
 }
 async function toggleMachine(id, active) {
   try {
@@ -339,6 +385,11 @@ function renderDetail(order) {
         })
         .join('')}
     </div>
+    <div class="row" style="gap:8px;margin:4px 0 10px;">
+      <span class="small" style="flex:1;">Rabatt</span>
+      <input id="detail-discount" type="number" min="0" step="0.5" value="${order.discount || 0}" style="width:80px;" class="font-mono" />
+      <button class="btn btn-ghost" style="padding:4px 10px;" onclick="saveDetailDiscount('${order.id}')">Übernehmen</button>
+    </div>
     <div class="row" style="margin-bottom:10px;"><span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(orderTotal(order))}</span></div>
     <label class="small">Telefonnummer</label>
     <div class="row" style="gap:8px;margin:4px 0 12px;">
@@ -355,6 +406,16 @@ function renderDetail(order) {
       <button class="btn btn-ghost" style="flex:1;color:#D9637E;" onclick="cancelOrder('${order.id}')">Bestellung stornieren</button>
     </div>
   `;
+}
+async function saveDetailDiscount(id) {
+  const discount = document.getElementById('detail-discount').value;
+  try {
+    await api(`/api/orders/${id}/discount`, { method: 'POST', body: JSON.stringify({ discount }) });
+    await loadAll();
+    openOrderDetail(id);
+  } catch (e) {
+    alert(e.message);
+  }
 }
 async function saveDetailPhone(id) {
   const phone = document.getElementById('detail-phone').value.trim();
