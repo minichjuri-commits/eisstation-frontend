@@ -5,7 +5,7 @@
   --bg: #1B1D21;
   --panel: #232629;
   --panel-alt: #2B2F34;
-  --border: #3A3E44;
+  --border: #454A52;
   --text: #F2EFE9;
   --text-dim: #9AA0A6;
   --amber: #E8A33D;
@@ -16,6 +16,7 @@
   --radius-lg: 16px;
   --font-display: 'Oswald', sans-serif;
   --font-display-tracking: 0.02em;
+  --shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 /* Theme: Kakigori (japanisches Raspeleis) im "kawaii"-Look - pastellblau
@@ -26,7 +27,7 @@
   --bg: #E9F5FC;
   --panel: #FFFFFF;
   --panel-alt: #D9EEFA;
-  --border: #BFE0F0;
+  --border: #93CBE8;
   --text: #375367;
   --text-dim: #7C9DAD;
   --amber: #6EC6E8;
@@ -37,10 +38,11 @@
   --radius-lg: 26px;
   --font-display: 'Baloo 2', cursive;
   --font-display-tracking: 0em;
+  --shadow: 0 4px 16px rgba(110, 198, 232, 0.28);
 }
 [data-theme="kakigori"] body {
   background-color: var(--bg);
-  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQkZFMEYwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIwLjU1Ij4KICAgIDxwYXRoIGQ9Ik0xOCA3MCBMMjIgMTAwIEw1NCAxMDAgTDU4IDcwIFoiIC8+CiAgICA8Y2lyY2xlIGN4PSIyNiIgY3k9IjY2IiByPSIxMCIgLz4KICAgIDxjaXJjbGUgY3g9IjM4IiBjeT0iNTgiIHI9IjEzIiAvPgogICAgPGNpcmNsZSBjeD0iNTAiIGN5PSI2NiIgcj0iMTAiIC8+CiAgICA8Y2lyY2xlIGN4PSIzOCIgY3k9IjQ2IiByPSI0LjUiIGZpbGw9IiNCRkUwRjAiIHN0cm9rZT0ibm9uZSIgLz4KICAgIDxwYXRoIGQ9Ik0xMDUgMjAgTDEwOCAyOCBMMTE2IDMxIEwxMDggMzQgTDEwNSA0MiBMMTAyIDM0IEw5NCAzMSBMMTAyIDI4IFoiIC8+CiAgICA8cGF0aCBkPSJNMTA4IDg1IEMxMTMgOTIgMTE2IDk3IDEwOCAxMDQgQzEwMCA5NyAxMDMgOTIgMTA4IDg1IFoiIC8+CiAgICA8cGF0aCBkPSJNMjUgMTUgTDI3IDIwIEwzMiAyMiBMMjcgMjQgTDI1IDI5IEwyMyAyNCBMMTggMjIgTDIzIDIwIFoiIC8+CiAgPC9nPgo8L3N2Zz4=");
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNjAiIGhlaWdodD0iMTYwIiB2aWV3Qm94PSIwIDAgMTYwIDE2MCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQkZFMEYwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIwLjUiPgogICAgPCEtLSBFaXNiZXJnIChLYWtpZ29yaS1Nb3VuZCkgLS0+CiAgICA8Y2lyY2xlIGN4PSI1MCIgY3k9IjcyIiByPSIyMCIgLz4KICAgIDxjaXJjbGUgY3g9IjcwIiBjeT0iNTYiIHI9IjI0IiAvPgogICAgPGNpcmNsZSBjeD0iOTAiIGN5PSI3MiIgcj0iMjAiIC8+CiAgICA8cGF0aCBkPSJNNTAgNjggcTYgLTUgMTIgMCIgLz4KICAgIDxwYXRoIGQ9Ik03OCA2OCBxNiAtNSAxMiAwIiAvPgogICAgPHBhdGggZD0iTTYyIDc4IHE4IC01IDE2IDAiIC8+CiAgICA8IS0tIEdsYXNzY2hhbGUgbWl0IEZ1c3MgLS0+CiAgICA8ZWxsaXBzZSBjeD0iNzAiIGN5PSI5MiIgcng9IjMyIiByeT0iOCIgLz4KICAgIDxwYXRoIGQ9Ik0zOSA5MyBMNDcgMTE3IFE3MCAxMjUgOTMgMTE3IEwxMDEgOTMiIC8+CiAgICA8bGluZSB4MT0iNzAiIHkxPSIxMTgiIHgyPSI3MCIgeTI9IjEzMiIgLz4KICAgIDxlbGxpcHNlIGN4PSI3MCIgY3k9IjEzNyIgcng9IjE4IiByeT0iNSIgLz4KICAgIDwhLS0gTG9lZmZlbCAtLT4KICAgIDxsaW5lIHgxPSI5OSIgeTE9IjYyIiB4Mj0iMTE4IiB5Mj0iOTciIC8+CiAgICA8ZWxsaXBzZSBjeD0iMTIyIiBjeT0iMTA0IiByeD0iNyIgcnk9IjEwIiB0cmFuc2Zvcm09InJvdGF0ZSgyNSAxMjIgMTA0KSIgLz4KICA8L2c+Cjwvc3ZnPg==");
   background-repeat: repeat;
 }
 
@@ -49,7 +51,7 @@
   --bg: #F7F7F5;
   --panel: #FFFFFF;
   --panel-alt: #F0F0EE;
-  --border: #DEDEDA;
+  --border: #C7C7C1;
   --text: #24262A;
   --text-dim: #6B6F76;
   --amber: #D98A2B;
@@ -60,6 +62,7 @@
   --radius-lg: 14px;
   --font-display: 'Oswald', sans-serif;
   --font-display-tracking: 0.02em;
+  --shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
@@ -87,8 +90,8 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 .grid { display: grid; gap: 24px; }
 @media (min-width: 1024px) { .grid-2col { grid-template-columns: 2fr 1fr; } }
 
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.panel-alt { background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.panel { background: var(--panel); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
+.panel-alt { background: var(--panel-alt); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); }
 
 .ticket { position: relative; margin-top: 10px; }
 .ticket::before {
@@ -99,8 +102,9 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
 .flavor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .flavor-tile {
-  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--panel); border: 1.5px solid var(--border); border-radius: var(--radius);
   padding: 14px; text-align: left; cursor: pointer; color: var(--text); font-family: inherit;
+  box-shadow: var(--shadow);
 }
 .flavor-tile:active { transform: scale(.97); }
 
@@ -129,7 +133,7 @@ input, select {
   display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
 }
 .hidden { display: none !important; }
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 10px; }
+.card { background: var(--panel); border: 1.5px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 10px; box-shadow: var(--shadow); }
 .stack > * + * { margin-top: 8px; }
 a { color: var(--amber); }
 h2, h3, h4 { margin: 0 0 4px 0; }
