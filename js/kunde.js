@@ -51,6 +51,13 @@ async function init() {
   pollTimer = setInterval(refresh, 5000);
 }
 async function refresh() {
+  // Waehrend der Kunde gerade tippt (z.B. die Telefonnummer), soll die
+  // automatische Aktualisierung nicht dazwischenfunken und das Eingabefeld
+  // leeren - deshalb hier ueberspringen, solange ein Eingabefeld aktiv ist.
+  const active = document.activeElement;
+  if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA')) {
+    return;
+  }
   let order;
   try {
     order = await api('/api/public/orders/' + orderId);

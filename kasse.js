@@ -58,18 +58,15 @@ function renderFlavorGrid() {
   el.innerHTML = state.flavors
     .map(
       (f) => `
-    <button class="flavor-tile" onclick="addToCart('${f.id}')">
+    <button class="flavor-tile" onclick="addToCart('${f.id}')" style="position:relative;">
+      ${
+        state.cart[f.id]
+          ? `<span class="pill font-mono" style="position:absolute;top:10px;right:10px;background:#E8A33D22;color:#E8A33D;">${state.cart[f.id]}x</span>`
+          : ''
+      }
       <span class="dot" style="background:${f.color}"></span>
       <div style="margin-top:8px;font-weight:600;">${escapeHtml(f.name)}</div>
       <div class="small font-mono">${euro(f.price)}</div>
-      ${
-        state.cart[f.id]
-          ? `<div class="row" style="margin-top:8px;" onclick="event.stopPropagation()">
-        <button class="btn btn-ghost" style="padding:2px 8px;" onclick="decFromCart('${f.id}')">-</button>
-        <span class="font-mono">${state.cart[f.id]}</span><span></span>
-      </div>`
-          : '<div style="height:22px;margin-top:8px;"></div>'
-      }
     </button>`
     )
     .join('');

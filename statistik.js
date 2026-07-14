@@ -39,7 +39,7 @@ async function load() {
               (g) => `
       <tr style="border-bottom:1px solid var(--border);">
         <td style="padding:6px;"><span class="dot" style="background:${g.color};width:10px;height:10px;display:inline-block;margin-right:6px;"></span>${g.name}</td>
-        <td style="padding:6px;" class="font-mono">${g.units}</td>
+        <td style="padding:6px;" class="font-mono">${g.flavorId === '__discount__' ? '–' : g.units}</td>
         <td style="padding:6px;" class="font-mono">${euro(g.revenue)}</td>
       </tr>`
             )
