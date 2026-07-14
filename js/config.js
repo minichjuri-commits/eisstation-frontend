@@ -1,5 +1,2 @@
-// WICHTIG: Nach dem Deployment des Backends auf Render hier die eigene
-// Backend-Adresse eintragen (ohne Schraegstrich am Ende), z.B.:
-//   const API_BASE = "https://eisstation-backend.onrender.com";
-// Siehe DEPLOY-ANLEITUNG.md, Teil 3.
+// Backend-Adresse (Render) - fest eingetragen.
 const API_BASE = "https://eisstation-backend-1.onrender.com";

@@ -1,3 +1,32 @@
+// Ersetzt das native, blockierende confirm() (das den kompletten Tab
+// einfriert und in Chrome als "Event handlers blocked UI updates" auffaellt)
+// durch einen eigenen, nicht-blockierenden Dialog im App-Design.
+function confirmDialog(message) {
+  return new Promise((resolve) => {
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.innerHTML = `
+      <div class="panel-alt" style="max-width:320px;width:100%;">
+        <p style="margin-bottom:16px;">${escapeHtml(message)}</p>
+        <div class="row" style="gap:8px;">
+          <button class="btn btn-ghost" style="flex:1;" id="confirm-cancel">Abbrechen</button>
+          <button class="btn btn-amber" style="flex:1;" id="confirm-ok">Bestätigen</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+    function cleanup(result) {
+      document.body.removeChild(overlay);
+      resolve(result);
+    }
+    document.getElementById('confirm-ok').addEventListener('click', () => cleanup(true));
+    document.getElementById('confirm-cancel').addEventListener('click', () => cleanup(false));
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) cleanup(false);
+    });
+  });
+}
+
 const state = { flavors: [], machines: [], orders: [], cart: {} };
 let expandedQueue = null;
 let discountActive = false;
@@ -7,10 +36,10 @@ function euro(n) { return (Number(n) || 0).toLocaleString('de-DE', { style: 'cur
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 
 function statusMeta(status) {
-  if (status === 'offen') return { label: 'Offen', color: '#D9637E' };
-  if (status === 'in_bearbeitung') return { label: 'Wird zubereitet', color: '#E8A33D' };
-  if (status === 'storniert') return { label: 'Storniert', color: '#6D7278' };
-  return { label: 'Fertig', color: '#7FB77E' };
+  if (status === 'offen') return { label: 'Offen', color: cssVar('--pink') };
+  if (status === 'in_bearbeitung') return { label: 'Wird zubereitet', color: cssVar('--amber') };
+  if (status === 'storniert') return { label: 'Storniert', color: cssVar('--gray') };
+  return { label: 'Fertig', color: cssVar('--green') };
 }
 function pillHtml(status) {
   const m = statusMeta(status);
@@ -33,6 +62,38 @@ async function api(path, opts) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(data.error || 'Fehler');
   return data;
+}
+
+// Fuer den Zeit-Timer: aktualisiert NUR Dinge, die sich "live" aendern
+// sollten (neue Bestellungen, Warteschlangen, Auslastungszahlen) - ruehrt
+// aber absichtlich NIE die Sorten-/Maschinen-Verwaltung an (Namensfelder,
+// Farbwaehler, Preisfelder), damit eine Eingabe dort nie durch die
+// automatische Aktualisierung unterbrochen wird. Diese Bereiche werden nur
+// noch durch eigene Aktionen (Speichern/Hinzufuegen/Loeschen) neu aufgebaut.
+async function pollLive() {
+  try {
+    const [flavors, machines, orders] = await Promise.all([api('/api/flavors'), api('/api/machines'), api('/api/orders')]);
+    state.flavors = flavors;
+    state.machines = machines;
+    state.orders = orders;
+    renderFlavorGrid();
+    renderRecentOrders();
+    renderQueues();
+    updateMachineOpenCounts();
+    document.getElementById('order-count').textContent = state.orders.length + ' Bestellungen';
+  } catch (e) {
+    // naechster Versuch beim naechsten Intervall - hier bewusst still,
+    // damit kurze Backend-Aussetzer (z.B. Aufwachen) nicht staendig stoeren.
+  }
+}
+function updateMachineOpenCounts() {
+  state.machines.forEach((m) => {
+    const el = document.getElementById('machine-opencount-' + m.id);
+    if (el) {
+      el.textContent = m.openCount + ' offen';
+      el.style.color = m.active && m.openCount > 2 ? cssVar('--pink') : cssVar('--text-dim');
+    }
+  });
 }
 
 async function loadAll() {
@@ -61,7 +122,7 @@ function renderFlavorGrid() {
     <button class="flavor-tile" onclick="addToCart('${f.id}')" style="position:relative;">
       ${
         state.cart[f.id]
-          ? `<span class="pill font-mono" style="position:absolute;top:10px;right:10px;background:#E8A33D22;color:#E8A33D;">${state.cart[f.id]}x</span>`
+          ? `<span class="pill font-mono" style="position:absolute;top:10px;right:10px;background:${cssVar('--amber')}22;color:${cssVar('--amber')};">${state.cart[f.id]}x</span>`
           : ''
       }
       <span class="dot" style="background:${f.color}"></span>
@@ -119,7 +180,7 @@ function renderCart() {
         <button class="btn btn-ghost" style="padding:4px 10px;" onclick="toggleDiscount()">${discountActive ? 'Entfernen' : 'Anwenden'}</button>
       </span>
     </div>
-    ${discountActive ? `<div class="row" style="margin-top:4px;"><span class="small">Rabatt aktiv</span><span class="font-mono small" style="color:#7FB77E;">-${euro(discountAmount)}</span></div>` : ''}
+    ${discountActive ? `<div class="row" style="margin-top:4px;"><span class="small">Rabatt aktiv</span><span class="font-mono small" style="color:${cssVar('--green')};">-${euro(discountAmount)}</span></div>` : ''}
     <div class="row" style="border-top:1px solid var(--border);padding-top:8px;margin-top:8px;">
       <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(netTotal)}</span>
     </div>
@@ -178,7 +239,7 @@ function renderFlavorAdmin() {
           <input value="${escapeHtml(f.name)}" style="flex:1;" onchange="updateFlavor('${f.id}', {name:this.value})" />
           <input type="number" min="0" step="0.5" value="${f.price}" style="width:80px;" class="font-mono" onchange="updateFlavor('${f.id}', {price:this.value})" />
           <span class="small">€</span>
-          <button class="btn btn-ghost" style="padding:4px 8px;color:#D9637E;" onclick="deleteFlavor('${f.id}','${escapeHtml(f.name).replace(/'/g, '')}')" title="Sorte entfernen">🗑</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;color:${cssVar('--pink')};" onclick="deleteFlavor('${f.id}','${escapeHtml(f.name).replace(/'/g, '')}')" title="Sorte entfernen">🗑</button>
         </div>`
         )
         .join('')}
@@ -194,7 +255,7 @@ function renderFlavorAdmin() {
   `;
 }
 async function deleteFlavor(id, name) {
-  if (!confirm(`Sorte "${name}" wirklich entfernen? Bereits aufgenommene Bestellungen bleiben davon unberührt.`)) return;
+  if (!(await confirmDialog(`Sorte "${name}" wirklich entfernen? Bereits aufgenommene Bestellungen bleiben davon unberührt.`))) return;
   try {
     await api('/api/flavors/' + id, { method: 'DELETE' });
     await loadAll();
@@ -234,10 +295,10 @@ function renderMachinePanel() {
           (m) => `
         <div class="row" style="gap:8px;">
           <input value="${escapeHtml(m.name)}" style="flex:1;" onchange="renameMachine(${m.id}, this.value)" />
-          ${!m.active ? '<span class="pill" style="background:#D9637E22;color:#D9637E;">aus</span>' : ''}
-          <span class="small font-mono">${m.openCount} offen</span>
+          ${!m.active ? `<span class="pill" style="background:${cssVar('--pink')}22;color:${cssVar('--pink')};">aus</span>` : ''}
+          <span class="small font-mono" id="machine-opencount-${m.id}">${m.openCount} offen</span>
           <button class="btn btn-ghost" style="padding:4px 8px;" onclick="toggleMachine(${m.id}, ${!m.active})">${m.active ? '⏻ Aus' : '⏻ An'}</button>
-          <button class="btn btn-ghost" style="padding:4px 8px;color:#D9637E;" onclick="deleteMachine(${m.id},'${escapeHtml(m.name).replace(/'/g, '')}')" title="Maschine entfernen">🗑</button>
+          <button class="btn btn-ghost" style="padding:4px 8px;color:${cssVar('--pink')};" onclick="deleteMachine(${m.id},'${escapeHtml(m.name).replace(/'/g, '')}')" title="Maschine entfernen">🗑</button>
         </div>`
         )
         .join('')}
@@ -247,7 +308,7 @@ function renderMachinePanel() {
   `;
 }
 async function deleteMachine(id, name) {
-  if (!confirm(`Maschine "${name}" wirklich entfernen? Offene Artikel werden vorher auf andere Maschinen verteilt.`)) return;
+  if (!(await confirmDialog(`Maschine "${name}" wirklich entfernen? Offene Artikel werden vorher auf andere Maschinen verteilt.`))) return;
   try {
     await api('/api/machines/' + id, { method: 'DELETE' });
     await loadAll();
@@ -400,7 +461,7 @@ function renderDetail(order) {
     }
     <div class="row" style="gap:8px;margin-top:14px;">
       <button class="btn btn-ghost" style="flex:1;" onclick="document.getElementById('detail-modal').classList.add('hidden')">Schließen</button>
-      <button class="btn btn-ghost" style="flex:1;color:#D9637E;" onclick="cancelOrder('${order.id}')">Bestellung stornieren</button>
+      <button class="btn btn-ghost" style="flex:1;color:${cssVar('--pink')};" onclick="cancelOrder('${order.id}')">Bestellung stornieren</button>
     </div>
   `;
 }
@@ -435,7 +496,7 @@ async function cancelItem(orderId, itemId) {
   }
 }
 async function cancelOrder(id) {
-  if (!confirm('Gesamte Bestellung wirklich stornieren?')) return;
+  if (!(await confirmDialog('Gesamte Bestellung wirklich stornieren?'))) return;
   try {
     await api(`/api/orders/${id}/cancel`, { method: 'PATCH' });
     await loadAll();
@@ -445,8 +506,12 @@ async function cancelOrder(id) {
   }
 }
 
+document.addEventListener('eisstation:themechange', () => {
+  if (state.flavors.length || state.machines.length) render();
+});
+
 requireStaffLogin(() => {
   initNav('kasse');
   loadAll();
-  setInterval(loadAll, 6000);
+  setInterval(pollLive, 6000);
 });

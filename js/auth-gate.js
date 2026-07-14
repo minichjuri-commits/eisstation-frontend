@@ -50,7 +50,7 @@ function showLoginOverlay(onReady) {
       <input id="login-user" style="width:100%;margin:4px 0 10px;" />
       <label class="small">Passwort</label>
       <input id="login-pass" type="password" style="width:100%;margin:4px 0 10px;" />
-      <p id="login-error" class="small" style="color:#D9637E;min-height:32px;"></p>
+      <p id="login-error" class="small" style="color:${cssVar('--pink')};min-height:32px;"></p>
       <button class="btn btn-amber" style="width:100%;" id="login-submit">Anmelden</button>
     </div>
   `;

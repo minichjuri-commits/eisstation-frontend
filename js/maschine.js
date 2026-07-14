@@ -3,10 +3,10 @@ const machineId = parseInt(new URLSearchParams(location.search).get('id') || '1'
 function euro(n) { return (Number(n) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }); }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function statusMeta(status) {
-  if (status === 'offen') return { label: 'Offen', color: '#D9637E' };
-  if (status === 'in_bearbeitung') return { label: 'Wird zubereitet', color: '#E8A33D' };
-  if (status === 'storniert') return { label: 'Storniert', color: '#6D7278' };
-  return { label: 'Fertig', color: '#7FB77E' };
+  if (status === 'offen') return { label: 'Offen', color: cssVar('--pink') };
+  if (status === 'in_bearbeitung') return { label: 'Wird zubereitet', color: cssVar('--amber') };
+  if (status === 'storniert') return { label: 'Storniert', color: cssVar('--gray') };
+  return { label: 'Fertig', color: cssVar('--green') };
 }
 function pillHtml(status) {
   const m = statusMeta(status);
@@ -40,7 +40,7 @@ async function load() {
   document.getElementById('toggle-machine').onclick = () => toggleActive(machine && machine.active);
   document.getElementById('inactive-banner').innerHTML =
     machine && !machine.active
-      ? `<div class="panel" style="border-color:#D9637E;margin-bottom:16px;">Diese Maschine ist deaktiviert. Neue Artikel werden anderen Maschinen zugewiesen. Bereits laufende Artikel bitte noch fertigstellen.</div>`
+      ? `<div class="panel" style="border-color:${cssVar('--pink')};margin-bottom:16px;">Diese Maschine ist deaktiviert. Neue Artikel werden anderen Maschinen zugewiesen. Bereits laufende Artikel bitte noch fertigstellen.</div>`
       : '';
 
   const active = queue.filter((i) => i.status === 'offen' || i.status === 'in_bearbeitung');
@@ -126,6 +126,8 @@ async function renameMachine(name) {
     alert(e.message);
   }
 }
+
+document.addEventListener('eisstation:themechange', () => load());
 
 requireStaffLogin(() => {
   initNav('maschine' + machineId);

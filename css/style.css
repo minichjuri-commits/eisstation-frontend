@@ -1,5 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&family=Baloo+2:wght@500;600;700;800&display=swap');
 
+/* Standard-Theme: Dunkel (aktuelles Layout) */
 :root {
   --bg: #1B1D21;
   --panel: #232629;
@@ -10,10 +11,53 @@
   --amber: #E8A33D;
   --green: #7FB77E;
   --pink: #D9637E;
+  --gray: #6D7278;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --font-display: 'Oswald', sans-serif;
+  --font-display-tracking: 0.02em;
+}
+
+/* Theme: Kakigori (japanisches Raspeleis) im "kawaii"-Look - helle
+   Pastellfarben (Erdbeere/Melone/Blue Hawaii), runde bubblige Formen,
+   verspielte Schrift. */
+[data-theme="kakigori"] {
+  --bg: #FFF3F7;
+  --panel: #FFFFFF;
+  --panel-alt: #FFE6EF;
+  --border: #FFC4DA;
+  --text: #6B4557;
+  --text-dim: #BE93A8;
+  --amber: #FFB0D6;
+  --green: #8FDDBB;
+  --pink: #FF6F91;
+  --gray: #C9A8B8;
+  --radius: 20px;
+  --radius-lg: 26px;
+  --font-display: 'Baloo 2', cursive;
+  --font-display-tracking: 0em;
+}
+
+/* Theme: Hell - klares, helles Layout ohne verspielten Charakter */
+[data-theme="light"] {
+  --bg: #F7F7F5;
+  --panel: #FFFFFF;
+  --panel-alt: #F0F0EE;
+  --border: #DEDEDA;
+  --text: #24262A;
+  --text-dim: #6B6F76;
+  --amber: #D98A2B;
+  --green: #4F9E6E;
+  --pink: #C94F6D;
+  --gray: #8A8E94;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --font-display: 'Oswald', sans-serif;
+  --font-display-tracking: 0.02em;
 }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; }
-.font-display { font-family: 'Oswald', sans-serif; letter-spacing: .02em; }
+.font-display { font-family: var(--font-display); letter-spacing: var(--font-display-tracking); }
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 
 header.app-header {
@@ -37,8 +81,8 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 .grid { display: grid; gap: 24px; }
 @media (min-width: 1024px) { .grid-2col { grid-template-columns: 2fr 1fr; } }
 
-.panel { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-.panel-alt { background: var(--panel-alt); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+.panel { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.panel-alt { background: var(--panel-alt); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
 
 .ticket { position: relative; margin-top: 10px; }
 .ticket::before {
@@ -49,7 +93,7 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
 .flavor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
 .flavor-tile {
-  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
   padding: 14px; text-align: left; cursor: pointer; color: var(--text); font-family: inherit;
 }
 .flavor-tile:active { transform: scale(.97); }
@@ -57,7 +101,7 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 .dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; vertical-align: middle; }
 
 .btn {
-  border: none; border-radius: 8px; padding: 10px 14px; font-weight: 600; cursor: pointer;
+  border: none; border-radius: calc(var(--radius) - 2px); padding: 10px 14px; font-weight: 600; cursor: pointer;
   font-family: inherit; font-size: 14px;
 }
 .btn-amber { background: var(--amber); color: #1B1D21; }
@@ -71,7 +115,7 @@ main { padding: 24px; max-width: 1200px; margin: 0 auto; }
 
 input, select {
   background: var(--panel-alt); border: 1px solid var(--border); color: var(--text);
-  border-radius: 6px; padding: 6px 8px; font-family: inherit; font-size: 14px;
+  border-radius: calc(var(--radius) - 4px); padding: 6px 8px; font-family: inherit; font-size: 14px;
 }
 
 .modal-overlay {
@@ -79,7 +123,7 @@ input, select {
   display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
 }
 .hidden { display: none !important; }
-.card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: calc(var(--radius) - 2px); padding: 10px; }
 .stack > * + * { margin-top: 8px; }
 a { color: var(--amber); }
 h2, h3, h4 { margin: 0 0 4px 0; }

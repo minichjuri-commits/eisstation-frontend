@@ -1,6 +1,5 @@
 const orderId = location.pathname.split('/').pop();
 let flavorsCache = null;
-let linked = false;
 let currentOrder = null;
 let pollTimer = null;
 
@@ -45,15 +44,15 @@ async function init() {
     document.getElementById('kunde-panel').innerHTML = '<p>Bestellung nicht gefunden.</p>';
     return;
   }
-  linked = !!order.phone;
   await renderAll(order);
   if (pollTimer) clearInterval(pollTimer);
   pollTimer = setInterval(refresh, 5000);
 }
+
 async function refresh() {
-  // Waehrend der Kunde gerade tippt (z.B. die Telefonnummer), soll die
-  // automatische Aktualisierung nicht dazwischenfunken und das Eingabefeld
-  // leeren - deshalb hier ueberspringen, solange ein Eingabefeld aktiv ist.
+  // Waehrend gerade in ein Eingabefeld getippt wird (z.B. die optionale
+  // Telefonnummer), soll die automatische Aktualisierung nicht
+  // dazwischenfunken und das Feld leeren.
   const active = document.activeElement;
   if (active && (active.tagName === 'INPUT' || active.tagName === 'SELECT' || active.tagName === 'TEXTAREA')) {
     return;
@@ -64,7 +63,6 @@ async function refresh() {
   } catch (e) {
     return;
   }
-  linked = !!order.phone;
   await renderAll(order);
 }
 
@@ -83,23 +81,13 @@ async function linkPhone() {
   }
 }
 
+// Die Bestellverfolgung (Status, Warteschlange, Gesamtpreis) ist immer
+// sichtbar - unabhaengig davon, ob eine Telefonnummer hinterlegt ist. Die
+// Telefonnummer ist rein optional und dient nur der zusaetzlichen
+// SMS-Benachrichtigung.
 async function renderAll(order) {
   currentOrder = order;
   const el = document.getElementById('kunde-panel');
-
-  if (!linked) {
-    el.innerHTML = `
-      <h2 class="font-display">Bestellung verfolgen</h2>
-      <p class="small">Telefonnummer angeben, um eine Bestellbestätigung sowie eine Benachrichtigung bei Fertigstellung per SMS zu erhalten.</p>
-      <label class="small">Bestellnummer</label>
-      <input value="${order.id}" disabled style="width:100%;margin:4px 0 12px;" />
-      <label class="small">Telefonnummer</label>
-      <input id="phone-input" placeholder="+49 151 23456789" style="width:100%;margin:4px 0 12px;" />
-      <p id="kunde-error" class="small" style="color:#D9637E;"></p>
-      <button class="btn btn-amber" style="width:100%;" onclick="linkPhone()">Verknüpfen</button>
-    `;
-    return;
-  }
 
   const flavors = await ensureFlavors();
   const status = deriveOrderStatus(order);
@@ -113,7 +101,7 @@ async function renderAll(order) {
   const groupRows = Object.values(groups)
     .map((g) => {
       const done = g.fertig === g.total;
-      const color = done ? '#7FB77E' : g.fertig > 0 ? '#E8A33D' : '#D9637E';
+      const color = done ? cssVar('--green') : g.fertig > 0 ? cssVar('--amber') : cssVar('--pink');
       const label = done ? 'Fertig' : g.fertig > 0 ? `${g.fertig}/${g.total} fertig` : 'Offen';
       return `<div class="row card" style="margin-bottom:6px;">
       <span><span class="dot" style="background:${g.flavor ? g.flavor.color : '#888'};width:10px;height:10px;"></span> ${g.total}x ${escapeHtml(g.flavor ? g.flavor.name : '?')}</span>
@@ -127,14 +115,14 @@ async function renderAll(order) {
     const deadline = order.completedAt + 2 * 60 * 1000;
     const remaining = deadline - Date.now();
     if (remaining > 0) {
-      pickupBanner = `<div class="panel-alt" style="border:1px solid #E8A33D;margin-bottom:12px;">
-        <p class="small" style="color:#E8A33D;font-weight:600;">⏱ Bitte jetzt abholen!</p>
+      pickupBanner = `<div class="panel-alt" style="border:1px solid ${cssVar('--amber')};margin-bottom:12px;">
+        <p class="small" style="color:${cssVar('--amber')};font-weight:600;">⏱ Bitte jetzt abholen!</p>
         <p class="small">Fertiggestellte Bestellungen müssen innerhalb von 2 Minuten abgeholt werden, sonst geht die Bestellung an den nächsten Kunden.</p>
         <p class="font-mono" id="pickup-countdown" style="font-size:20px;">${fmtDuration(remaining)}</p>
       </div>`;
     } else {
-      pickupBanner = `<div class="panel-alt" style="border:1px solid #D9637E;margin-bottom:12px;">
-        <p class="small" style="color:#D9637E;font-weight:600;">⏱ Abholzeit abgelaufen</p>
+      pickupBanner = `<div class="panel-alt" style="border:1px solid ${cssVar('--pink')};margin-bottom:12px;">
+        <p class="small" style="color:${cssVar('--pink')};font-weight:600;">⏱ Abholzeit abgelaufen</p>
         <p class="small">Bitte wenden Sie sich an das Personal.</p>
       </div>`;
     }
@@ -161,7 +149,7 @@ async function renderAll(order) {
                     ? mq.queue
                         .map(
                           (item, idx) => `
-                  <div class="card" style="font-size:12px;${item.isMine ? 'border-color:#E8A33D;background:#E8A33D14;' : ''}">
+                  <div class="card" style="font-size:12px;${item.isMine ? `border-color:${cssVar('--amber')};background:${cssVar('--amber')}14;` : ''}">
                     ${item.isMine ? `<strong>Ihre Bestellung (${escapeHtml(item.orderId)})</strong>` : 'Andere Bestellung'}
                     — Position ${idx + 1} — ${item.status === 'in_bearbeitung' ? 'wird zubereitet' : 'wartet'}
                   </div>`
@@ -180,6 +168,29 @@ async function renderAll(order) {
     }
   }
 
+  let phoneSection;
+  if (order.phone) {
+    phoneSection = order.messages.length
+      ? `<div class="stack">${order.messages
+          .map((m) => {
+            const c = m.type === 'completion' ? cssVar('--green') : cssVar('--amber');
+            return `<div class="card small" style="margin-bottom:6px;border-color:${c};"><strong>SMS:</strong> ${escapeHtml(m.text)}</div>`;
+          })
+          .join('')}</div>`
+      : `<p class="small">Sie werden per SMS benachrichtigt, sobald der erste Artikel fertig ist.</p>`;
+  } else {
+    phoneSection = `
+      <div class="panel-alt" style="margin-top:4px;">
+        <p class="small" style="margin-bottom:8px;">Optional: Telefonnummer angeben, um zusätzlich per SMS benachrichtigt zu werden. Die Verfolgung hier funktioniert auch ohne.</p>
+        <div class="row" style="gap:8px;">
+          <input id="phone-input" placeholder="+49 151 23456789" style="flex:1;" />
+          <button class="btn btn-amber" onclick="linkPhone()">Verknüpfen</button>
+        </div>
+        <p id="kunde-error" class="small" style="color:${cssVar('--pink')};margin-top:6px;"></p>
+      </div>
+    `;
+  }
+
   el.innerHTML = `
     <div class="row" style="margin-bottom:12px;">
       <span class="font-mono" style="font-size:20px;font-weight:600;">${order.id}</span>
@@ -189,24 +200,13 @@ async function renderAll(order) {
     ${groupRows}
     ${
       order.discount > 0
-        ? `<div class="row" style="padding-top:4px;"><span class="small">Rabatt</span><span class="font-mono small" style="color:#7FB77E;">-${euro(order.discount)}</span></div>`
+        ? `<div class="row" style="padding-top:4px;"><span class="small">Rabatt</span><span class="font-mono small" style="color:${cssVar('--green')};">-${euro(order.discount)}</span></div>`
         : ''
     }
     <div class="row" style="border-top:1px solid var(--border);padding-top:8px;margin:12px 0;">
       <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(orderTotal(order))}</span>
     </div>
-    ${
-      order.messages.length
-        ? order.messages
-            .map(
-              (m) => `
-      <div class="card small" style="margin-bottom:6px;border-color:${m.type === 'completion' ? '#7FB77E' : '#E8A33D'};">
-        <strong>SMS:</strong> ${escapeHtml(m.text)}
-      </div>`
-            )
-            .join('')
-        : `<p class="small">Sie werden per SMS benachrichtigt, sobald der erste Artikel fertig ist.</p>`
-    }
+    ${phoneSection}
     ${queueSection}
   `;
 }
@@ -218,5 +218,9 @@ setInterval(() => {
   const remaining = currentOrder.completedAt + 2 * 60 * 1000 - Date.now();
   el.textContent = fmtDuration(Math.max(0, remaining));
 }, 1000);
+
+document.addEventListener('eisstation:themechange', () => {
+  if (currentOrder) renderAll(currentOrder);
+});
 
 init();

@@ -56,6 +56,8 @@ document.getElementById('f-year').addEventListener('change', load);
 document.getElementById('f-month').addEventListener('change', load);
 document.getElementById('f-day').addEventListener('change', load);
 
+document.addEventListener('eisstation:themechange', () => load());
+
 requireStaffLogin(() => {
   initNav('statistik');
   load();

@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
+<script>
+  (function () {
+    try {
+      var saved = localStorage.getItem('eisstation_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+    } catch (e) {}
+  })();
+</script>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Eisstation - Maschine</title>
@@ -12,7 +20,10 @@
     <span class="emoji">🍦</span>
     <div><h1 class="font-display">Eisstation</h1><p>Internes Bestellsystem - nur für Personal</p></div>
   </div>
-  <span class="small font-mono" id="active-count"></span>
+  <div class="row" style="gap:14px;width:auto;">
+    <div id="theme-switcher" class="row" style="gap:6px;width:auto;"></div>
+    <span class="small font-mono" id="active-count"></span>
+  </div>
 </header>
 <nav class="tabs" id="tabs"></nav>
 <main>
@@ -30,6 +41,7 @@
     <div class="stack" id="done-list"></div>
   </div>
 </main>
+<script src="/js/theme.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/auth-gate.js"></script>
 <script src="/js/nav.js"></script>
