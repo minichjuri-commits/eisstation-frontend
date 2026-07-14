@@ -18,24 +18,30 @@
   --font-display-tracking: 0.02em;
 }
 
-/* Theme: Kakigori (japanisches Raspeleis) im "kawaii"-Look - helle
-   Pastellfarben (Erdbeere/Melone/Blue Hawaii), runde bubblige Formen,
-   verspielte Schrift. */
+/* Theme: Kakigori (japanisches Raspeleis) im "kawaii"-Look - pastellblau
+   angelehnt an die klassische "Blue Hawaii"-Kakigori-Sorte, mit Minze und
+   Erdbeere als Nebenakzente, runde bubblige Formen, verspielte Schrift, und
+   einem dezenten Hintergrundmuster aus kleinen Eisbecher-/Funkel-Motiven. */
 [data-theme="kakigori"] {
-  --bg: #FFF3F7;
+  --bg: #E9F5FC;
   --panel: #FFFFFF;
-  --panel-alt: #FFE6EF;
-  --border: #FFC4DA;
-  --text: #6B4557;
-  --text-dim: #BE93A8;
-  --amber: #FFB0D6;
+  --panel-alt: #D9EEFA;
+  --border: #BFE0F0;
+  --text: #375367;
+  --text-dim: #7C9DAD;
+  --amber: #6EC6E8;
   --green: #8FDDBB;
-  --pink: #FF6F91;
-  --gray: #C9A8B8;
+  --pink: #FF93B0;
+  --gray: #9FB8C4;
   --radius: 20px;
   --radius-lg: 26px;
   --font-display: 'Baloo 2', cursive;
   --font-display-tracking: 0em;
+}
+[data-theme="kakigori"] body {
+  background-color: var(--bg);
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxNDAiIGhlaWdodD0iMTQwIiB2aWV3Qm94PSIwIDAgMTQwIDE0MCI+CiAgPGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQkZFMEYwIiBzdHJva2Utd2lkdGg9IjIuNSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIiBvcGFjaXR5PSIwLjU1Ij4KICAgIDxwYXRoIGQ9Ik0xOCA3MCBMMjIgMTAwIEw1NCAxMDAgTDU4IDcwIFoiIC8+CiAgICA8Y2lyY2xlIGN4PSIyNiIgY3k9IjY2IiByPSIxMCIgLz4KICAgIDxjaXJjbGUgY3g9IjM4IiBjeT0iNTgiIHI9IjEzIiAvPgogICAgPGNpcmNsZSBjeD0iNTAiIGN5PSI2NiIgcj0iMTAiIC8+CiAgICA8Y2lyY2xlIGN4PSIzOCIgY3k9IjQ2IiByPSI0LjUiIGZpbGw9IiNCRkUwRjAiIHN0cm9rZT0ibm9uZSIgLz4KICAgIDxwYXRoIGQ9Ik0xMDUgMjAgTDEwOCAyOCBMMTE2IDMxIEwxMDggMzQgTDEwNSA0MiBMMTAyIDM0IEw5NCAzMSBMMTAyIDI4IFoiIC8+CiAgICA8cGF0aCBkPSJNMTA4IDg1IEMxMTMgOTIgMTE2IDk3IDEwOCAxMDQgQzEwMCA5NyAxMDMgOTIgMTA4IDg1IFoiIC8+CiAgICA8cGF0aCBkPSJNMjUgMTUgTDI3IDIwIEwzMiAyMiBMMjcgMjQgTDI1IDI5IEwyMyAyNCBMMTggMjIgTDIzIDIwIFoiIC8+CiAgPC9nPgo8L3N2Zz4=");
+  background-repeat: repeat;
 }
 
 /* Theme: Hell - klares, helles Layout ohne verspielten Charakter */
