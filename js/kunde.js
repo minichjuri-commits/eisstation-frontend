@@ -12,6 +12,9 @@ function fmtDuration(ms) {
   const s = totalSec % 60;
   return m + ':' + String(s).padStart(2, '0');
 }
+function fmtDateTime(ts) {
+  return new Date(ts).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' Uhr';
+}
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts));
@@ -168,17 +171,40 @@ async function renderAll(order) {
     }
   }
 
+  // Ereignis-Zeitleiste: jede Bestellung hat mindestens den Zeitpunkt der
+  // Aufgabe; ist eine Telefonnummer hinterlegt, kommen SMS-Ereignisse und
+  // die Fertigstellung mit dazu - jeweils mit Datum + Uhrzeit.
+  const events = [{ label: 'Bestellung aufgegeben', time: order.createdAt }];
+  order.messages.forEach((m) => {
+    events.push({
+      label: m.type === 'completion' ? 'Fertigstellungs-SMS verschickt' : 'Bestellbestätigung per SMS verschickt',
+      time: m.time,
+      detail: m.text,
+    });
+  });
+  if (order.completedAt) {
+    events.push({ label: 'Bestellung komplett fertiggestellt', time: order.completedAt });
+  }
+  events.sort((a, b) => a.time - b.time);
+  const timelineSection = `
+    <div class="panel" style="margin-top:16px;">
+      <p class="small" style="margin-bottom:8px;color:var(--text-dim);">Verlauf</p>
+      <div class="stack">
+        ${events
+          .map(
+            (e) => `
+          <div class="card small">
+            <div class="row"><strong>${escapeHtml(e.label)}</strong><span class="font-mono small" style="color:var(--text-dim);">${fmtDateTime(e.time)}</span></div>
+            ${e.detail ? `<p class="small" style="margin-top:4px;">${escapeHtml(e.detail)}</p>` : ''}
+          </div>`
+          )
+          .join('')}
+      </div>
+    </div>
+  `;
+
   let phoneSection;
-  if (order.phone) {
-    phoneSection = order.messages.length
-      ? `<div class="stack">${order.messages
-          .map((m) => {
-            const c = m.type === 'completion' ? cssVar('--green') : cssVar('--amber');
-            return `<div class="card small" style="margin-bottom:6px;border-color:${c};"><strong>SMS:</strong> ${escapeHtml(m.text)}</div>`;
-          })
-          .join('')}</div>`
-      : `<p class="small">Sie werden per SMS benachrichtigt, sobald der erste Artikel fertig ist.</p>`;
-  } else {
+  if (!order.phone) {
     phoneSection = `
       <div class="panel-alt" style="margin-top:4px;">
         <p class="small" style="margin-bottom:8px;">Optional: Telefonnummer angeben, um zusätzlich per SMS benachrichtigt zu werden. Die Verfolgung hier funktioniert auch ohne.</p>
@@ -189,6 +215,8 @@ async function renderAll(order) {
         <p id="kunde-error" class="small" style="color:${cssVar('--pink')};margin-top:6px;"></p>
       </div>
     `;
+  } else {
+    phoneSection = '';
   }
 
   el.innerHTML = `
@@ -207,6 +235,7 @@ async function renderAll(order) {
       <span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(orderTotal(order))}</span>
     </div>
     ${phoneSection}
+    ${timelineSection}
     ${queueSection}
   `;
 }

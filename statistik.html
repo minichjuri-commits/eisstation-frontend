@@ -24,31 +24,55 @@
 </header>
 <nav class="tabs" id="tabs"></nav>
 <main>
-  <h2 class="font-display">Verkaufsstatistik</h2>
-  <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:16px;justify-content:flex-start;">
-    <select id="f-year"></select>
-    <select id="f-month">
-      <option value="">Alle Monate</option>
-      <option value="1">Januar</option><option value="2">Februar</option><option value="3">März</option>
-      <option value="4">April</option><option value="5">Mai</option><option value="6">Juni</option>
-      <option value="7">Juli</option><option value="8">August</option><option value="9">September</option>
-      <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
-    </select>
-    <input type="date" id="f-day" />
-    <button class="btn btn-ghost" onclick="clearDay()">Tag zurücksetzen</button>
+  <h2 class="font-display">Statistik</h2>
+  <div class="row" style="gap:8px;margin-bottom:20px;justify-content:flex-start;">
+    <button class="btn btn-ghost" id="subtab-btn-stats" onclick="showSubtab('stats')">Verkaufsstatistik</button>
+    <button class="btn btn-ghost" id="subtab-btn-orders" onclick="showSubtab('orders')">Bestellungen</button>
   </div>
-  <div class="grid grid-2col">
-    <div class="panel">
-      <h3 class="font-display" id="stat-period"></h3>
-      <table style="width:100%;border-collapse:collapse;" id="stat-table"></table>
+
+  <div id="subtab-stats">
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:16px;justify-content:flex-start;">
+      <select id="f-year"></select>
+      <select id="f-month">
+        <option value="">Alle Monate</option>
+        <option value="1">Januar</option><option value="2">Februar</option><option value="3">März</option>
+        <option value="4">April</option><option value="5">Mai</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
+      </select>
+      <input type="date" id="f-day" />
+      <button class="btn btn-ghost" onclick="clearDay()">Tag zurücksetzen</button>
     </div>
-    <div>
-      <div class="panel-alt">
-        <p class="small">Gesamterlös im Zeitraum</p>
-        <p class="font-mono" style="font-size:28px;font-weight:600;" id="stat-total-revenue"></p>
-        <p class="small" id="stat-total-units"></p>
+    <div class="grid grid-2col">
+      <div class="panel">
+        <h3 class="font-display" id="stat-period"></h3>
+        <table style="width:100%;border-collapse:collapse;" id="stat-table"></table>
+      </div>
+      <div>
+        <div class="panel-alt">
+          <p class="small">Gesamterlös im Zeitraum</p>
+          <p class="font-mono" style="font-size:28px;font-weight:600;" id="stat-total-revenue"></p>
+          <p class="small" id="stat-total-units"></p>
+        </div>
       </div>
     </div>
+  </div>
+
+  <div id="subtab-orders" class="hidden">
+    <p class="small" style="margin-bottom:12px;">Alle Bestellungen (auch vergangene Tage) - nach Zeitraum filterbar.</p>
+    <div class="row" style="gap:8px;flex-wrap:wrap;margin-bottom:16px;justify-content:flex-start;">
+      <select id="o-year"></select>
+      <select id="o-month">
+        <option value="">Alle Monate</option>
+        <option value="1">Januar</option><option value="2">Februar</option><option value="3">März</option>
+        <option value="4">April</option><option value="5">Mai</option><option value="6">Juni</option>
+        <option value="7">Juli</option><option value="8">August</option><option value="9">September</option>
+        <option value="10">Oktober</option><option value="11">November</option><option value="12">Dezember</option>
+      </select>
+      <input type="date" id="o-day" />
+      <button class="btn btn-ghost" onclick="clearOrderDay()">Tag zurücksetzen</button>
+    </div>
+    <div class="stack" id="orders-list"></div>
   </div>
 </main>
 <script src="/js/theme.js"></script>

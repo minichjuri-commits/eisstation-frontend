@@ -27,6 +27,16 @@ function confirmDialog(message) {
   });
 }
 
+// Grenzen des aktuellen Kalendertags in der Zeitzone dieses Geraets (nicht
+// des Servers) - so zeigt "Letzte Bestellungen" wirklich nur den heutigen
+// Tag, unabhaengig davon, wo/mit welcher Zeitzone das Backend laeuft.
+function todayBoundsQuery() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const end = start + 24 * 60 * 60 * 1000;
+  return `since=${start}&until=${end}`;
+}
+
 const state = { flavors: [], machines: [], orders: [], cart: {} };
 let expandedQueue = null;
 let discountActive = false;
@@ -72,7 +82,7 @@ async function api(path, opts) {
 // noch durch eigene Aktionen (Speichern/Hinzufuegen/Loeschen) neu aufgebaut.
 async function pollLive() {
   try {
-    const [flavors, machines, orders] = await Promise.all([api('/api/flavors'), api('/api/machines'), api('/api/orders')]);
+    const [flavors, machines, orders] = await Promise.all([api('/api/flavors'), api('/api/machines'), api('/api/orders?' + todayBoundsQuery())]);
     state.flavors = flavors;
     state.machines = machines;
     state.orders = orders;
@@ -80,7 +90,7 @@ async function pollLive() {
     renderRecentOrders();
     renderQueues();
     updateMachineOpenCounts();
-    document.getElementById('order-count').textContent = state.orders.length + ' Bestellungen';
+    document.getElementById('order-count').textContent = state.orders.length + ' Bestellungen heute';
   } catch (e) {
     // naechster Versuch beim naechsten Intervall - hier bewusst still,
     // damit kurze Backend-Aussetzer (z.B. Aufwachen) nicht staendig stoeren.
@@ -97,7 +107,7 @@ function updateMachineOpenCounts() {
 }
 
 async function loadAll() {
-  const [flavors, machines, orders] = await Promise.all([api('/api/flavors'), api('/api/machines'), api('/api/orders')]);
+  const [flavors, machines, orders] = await Promise.all([api('/api/flavors'), api('/api/machines'), api('/api/orders?' + todayBoundsQuery())]);
   state.flavors = flavors;
   state.machines = machines;
   state.orders = orders;
@@ -111,7 +121,7 @@ function render() {
   renderMachinePanel();
   renderQueues();
   renderRecentOrders();
-  document.getElementById('order-count').textContent = state.orders.length + ' Bestellungen';
+  document.getElementById('order-count').textContent = state.orders.length + ' Bestellungen heute';
 }
 
 function renderFlavorGrid() {
@@ -391,10 +401,13 @@ async function reassignItem(orderId, itemId, machine) {
   }
 }
 
-// --- Letzte Bestellungen (anklickbar) ---
+// --- Letzte Bestellungen (nur heutiger Kalendertag, anklickbar) ---
+function formatTime(ts) {
+  return new Date(ts).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+}
 function renderRecentOrders() {
   const el = document.getElementById('recent-orders');
-  const recent = state.orders.slice(0, 8);
+  const recent = state.orders;
   el.innerHTML = recent.length
     ? recent
         .map((o) => {
@@ -407,7 +420,7 @@ function renderRecentOrders() {
           const summary = Object.values(groups).map((g) => `${g.qty}x ${g.flavor ? g.flavor.name : '?'}`).join(', ');
           return `
         <div class="row card" style="cursor:pointer;" onclick="openOrderDetail('${o.id}')">
-          <span><span class="font-mono">${o.id}</span> <span class="small">${escapeHtml(summary)}</span></span>
+          <span><span class="font-mono">${o.id}</span> <span class="small font-mono" style="color:var(--text-dim);">${formatTime(o.createdAt)}</span> <span class="small">${escapeHtml(summary)}</span></span>
           <span class="row" style="gap:8px;width:auto;">
             <span class="small font-mono">${euro(orderTotal(o))}</span>
             ${o.phone ? '📞' : ''}
