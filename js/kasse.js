@@ -463,10 +463,8 @@ function renderDetail(order) {
     </div>
     <div class="row" style="margin-bottom:10px;"><span class="small">Gesamtpreis</span><span class="font-mono" style="font-weight:600;">${euro(orderTotal(order))}</span></div>
     <label class="small">Telefonnummer</label>
-    <div class="row" style="gap:8px;margin:4px 0 12px;">
-      <input id="detail-phone" value="${order.phone || ''}" placeholder="+49 151 23456789" style="flex:1;" />
-      <button class="btn btn-amber" onclick="saveDetailPhone('${order.id}')">Speichern</button>
-    </div>
+    <input id="detail-phone" value="${order.phone || ''}" placeholder="+49 151 23456789" style="width:100%;box-sizing:border-box;margin:4px 0 8px;" />
+    <button class="btn btn-amber" style="width:100%;margin-bottom:12px;" onclick="saveDetailPhone('${order.id}')">Speichern</button>
     ${
       order.messages.length
         ? `<div class="stack">${order.messages.map((m) => `<div class="card small">${escapeHtml(m.text)}${m.simulated ? ' <span style="color:var(--text-dim)">(simuliert - keine Twilio-Zugangsdaten)</span>' : ''}</div>`).join('')}</div>`

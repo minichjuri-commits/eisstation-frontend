@@ -208,10 +208,8 @@ async function renderAll(order) {
     phoneSection = `
       <div class="panel-alt" style="margin-top:4px;">
         <p class="small" style="margin-bottom:8px;">Optional: Telefonnummer angeben, um zusätzlich per SMS benachrichtigt zu werden. Die Verfolgung hier funktioniert auch ohne.</p>
-        <div class="row" style="gap:8px;">
-          <input id="phone-input" placeholder="+49 151 23456789" style="flex:1;" />
-          <button class="btn btn-amber" onclick="linkPhone()">Verknüpfen</button>
-        </div>
+        <input id="phone-input" placeholder="+49 151 23456789" style="width:100%;box-sizing:border-box;margin-bottom:8px;" />
+        <button class="btn btn-amber" style="width:100%;" onclick="linkPhone()">Verknüpfen</button>
         <p id="kunde-error" class="small" style="color:${cssVar('--pink')};margin-top:6px;"></p>
       </div>
     `;
