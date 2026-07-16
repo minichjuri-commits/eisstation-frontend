@@ -15,6 +15,14 @@ function fmtDuration(ms) {
 function fmtDateTime(ts) {
   return new Date(ts).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' Uhr';
 }
+// Heutige Tagesgrenzen in der Zeitzone dieses Geraets (nicht des Servers),
+// damit die Wartezeit-Schaetzung nur auf heutigen Werten basiert.
+function todayBoundsParams() {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const end = start + 24 * 60 * 60 * 1000;
+  return `dayStart=${start}&dayEnd=${end}`;
+}
 
 async function api(path, opts) {
   const res = await fetch(API_BASE + path, Object.assign({ headers: { 'Content-Type': 'application/json' } }, opts));
@@ -134,7 +142,7 @@ async function renderAll(order) {
   let queueSection = '';
   if (status === 'offen' || status === 'in_bearbeitung') {
     try {
-      const q = await api('/api/public/orders/' + orderId + '/queue');
+      const q = await api('/api/public/orders/' + orderId + '/queue?' + todayBoundsParams());
       const etaText = q.overallEstimateMs > 0 ? `ca. ${Math.ceil(q.overallEstimateMs / 60000)} Min.` : 'sehr bald';
       queueSection = `
         <div class="panel" style="margin-top:16px;">
