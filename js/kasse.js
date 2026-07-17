@@ -450,6 +450,8 @@ function renderDetail(order) {
           <span><span class="dot" style="background:${f ? f.color : '#888'};width:8px;height:8px;"></span> ${escapeHtml(f ? f.name : '?')} (M${i.machine})</span>
           <span class="row" style="gap:6px;width:auto;">
             ${pillHtml(i.status)}
+            ${i.status === 'offen' || i.status === 'in_bearbeitung' ? `<button class="btn btn-ghost" style="padding:2px 6px;" title="Zurück" onclick="revertItem('${order.id}','${i.itemId}')">↺</button>` : ''}
+            ${i.status === 'fertig' ? `<button class="btn btn-ghost" style="padding:2px 6px;" title="Zurück auf 'wird zubereitet'" onclick="revertItem('${order.id}','${i.itemId}')">↺</button>` : ''}
             ${i.status === 'offen' || i.status === 'in_bearbeitung' ? `<button class="btn btn-ghost" style="padding:2px 6px;" onclick="cancelItem('${order.id}','${i.itemId}')">Stornieren</button>` : ''}
           </span>
         </div>`;
@@ -467,7 +469,17 @@ function renderDetail(order) {
     <button class="btn btn-amber" style="width:100%;margin-bottom:12px;" onclick="saveDetailPhone('${order.id}')">Speichern</button>
     ${
       order.messages.length
-        ? `<div class="stack">${order.messages.map((m) => `<div class="card small">${escapeHtml(m.text)}${m.simulated ? ' <span style="color:var(--text-dim)">(simuliert - keine Twilio-Zugangsdaten)</span>' : ''}</div>`).join('')}</div>`
+        ? `<div class="stack">${order.messages
+            .map((m) => {
+              let note = '';
+              if (m.failed) {
+                note = ` <span style="color:${cssVar('--pink')};">(Twilio-Fehler: ${escapeHtml(m.error || 'unbekannt')})</span>`;
+              } else if (m.simulated) {
+                note = ' <span style="color:var(--text-dim);">(simuliert - keine Twilio-Zugangsdaten)</span>';
+              }
+              return `<div class="card small">${escapeHtml(m.text)}${note}</div>`;
+            })
+            .join('')}</div>`
         : '<p class="small">Noch keine SMS versendet.</p>'
     }
     <div class="row" style="gap:8px;margin-top:14px;">
@@ -500,6 +512,15 @@ async function saveDetailPhone(id) {
 async function cancelItem(orderId, itemId) {
   try {
     await api(`/api/orders/${orderId}/items/${itemId}/cancel`, { method: 'PATCH' });
+    await loadAll();
+    openOrderDetail(orderId);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+async function revertItem(orderId, itemId) {
+  try {
+    await api(`/api/orders/${orderId}/items/${itemId}/revert`, { method: 'PATCH' });
     await loadAll();
     openOrderDetail(orderId);
   } catch (e) {

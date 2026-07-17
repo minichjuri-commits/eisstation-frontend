@@ -42,6 +42,7 @@
       </select>
       <input type="date" id="f-day" />
       <button class="btn btn-ghost" onclick="clearDay()">Tag zurücksetzen</button>
+      <button class="btn btn-ghost" onclick="exportStatsCsv()">⬇ Als CSV exportieren</button>
     </div>
     <div class="grid grid-2col">
       <div class="panel">
@@ -71,7 +72,9 @@
       </select>
       <input type="date" id="o-day" />
       <button class="btn btn-ghost" onclick="clearOrderDay()">Tag zurücksetzen</button>
+      <button class="btn btn-ghost" onclick="exportOrdersCsv()">⬇ Als CSV exportieren</button>
     </div>
+    <input id="o-search" placeholder="Suche nach Bestellnummer oder Telefonnummer" style="width:100%;box-sizing:border-box;margin-bottom:16px;" />
     <div class="stack" id="orders-list"></div>
   </div>
 </main>

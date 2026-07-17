@@ -80,6 +80,7 @@ async function loadColumn(side, machineId) {
           </div>
           <div class="row" style="gap:6px;">
             <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1;padding:8px;" onclick="advance('${i.orderId}','${i.itemId}','${side}',${machineId})">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
+            <button class="btn btn-ghost" style="padding:8px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button>
             <button class="btn btn-ghost" style="padding:8px;" onclick="cancelItem('${i.orderId}','${i.itemId}','${side}',${machineId})">✕</button>
           </div>
         </div>`;
@@ -93,7 +94,7 @@ async function loadColumn(side, machineId) {
         done
           .map((i) => {
             const f = flavors.find((fl) => fl.id === i.flavorId);
-            return `<div class="row card"><span class="font-mono small">${i.orderId}</span><span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}</div>`;
+            return `<div class="row card"><span class="font-mono small">${i.orderId}</span><span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 6px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button></div>`;
           })
           .join('') || '<p class="small">Noch nichts fertig.</p>'
       }
@@ -118,6 +119,14 @@ async function loadAllColumns() {
 async function advance(orderId, itemId, side, machineId) {
   try {
     await api(`/api/orders/${orderId}/items/${itemId}/advance`, { method: 'PATCH' });
+    await loadColumn(side, machineId);
+  } catch (e) {
+    alert(e.message);
+  }
+}
+async function revert(orderId, itemId, side, machineId) {
+  try {
+    await api(`/api/orders/${orderId}/items/${itemId}/revert`, { method: 'PATCH' });
     await loadColumn(side, machineId);
   } catch (e) {
     alert(e.message);

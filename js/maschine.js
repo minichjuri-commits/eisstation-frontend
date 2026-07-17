@@ -68,6 +68,7 @@ async function load() {
         </div>
         <div class="row" style="gap:8px;">
           <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1;" onclick="advance('${i.orderId}','${i.itemId}')">${i.status === 'offen' ? 'Bearbeitung starten' : 'Als fertig markieren'}</button>
+          <button class="btn btn-ghost" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}')">↺</button>
           <button class="btn btn-ghost" onclick="cancelItem('${i.orderId}','${i.itemId}')">Stornieren</button>
         </div>
       </div>`;
@@ -79,7 +80,7 @@ async function load() {
     done
       .map((i) => {
         const f = flavors.find((fl) => fl.id === i.flavorId);
-        return `<div class="row card"><span class="font-mono">${i.orderId}</span> <span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}</div>`;
+        return `<div class="row card"><span class="font-mono">${i.orderId}</span> <span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 8px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}')">↺</button></div>`;
       })
       .join('') || '<p class="small">Noch nichts fertiggestellt.</p>';
 }
@@ -87,6 +88,14 @@ async function load() {
 async function advance(orderId, itemId) {
   try {
     await api(`/api/orders/${orderId}/items/${itemId}/advance`, { method: 'PATCH' });
+    await load();
+  } catch (e) {
+    alert(e.message);
+  }
+}
+async function revert(orderId, itemId) {
+  try {
+    await api(`/api/orders/${orderId}/items/${itemId}/revert`, { method: 'PATCH' });
     await load();
   } catch (e) {
     alert(e.message);

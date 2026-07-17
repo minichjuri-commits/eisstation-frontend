@@ -1,5 +1,32 @@
 function euro(n) { return (Number(n) || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' }); }
 function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// CSV-Export: Semikolon als Trennzeichen (Excel in deutscher Spracheinstellung
+// erwartet das, da das Komma dort als Dezimaltrennzeichen dient) und ein
+// BOM am Anfang, damit Umlaute in Excel korrekt als UTF-8 erkannt werden.
+function toCsv(rows) {
+  return rows
+    .map((row) =>
+      row
+        .map((cell) => {
+          const s = String(cell == null ? '' : cell);
+          return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        })
+        .join(';')
+    )
+    .join('\r\n');
+}
+function downloadCsv(filename, csvContent) {
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 function fmtDateTime(ts) {
   return new Date(ts).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' Uhr';
 }
@@ -40,6 +67,8 @@ function showSubtab(which) {
   if (which === 'orders') loadOrders();
 }
 
+let lastStatsData = null;
+
 async function load() {
   const year = document.getElementById('f-year').value;
   const month = document.getElementById('f-month').value;
@@ -51,6 +80,7 @@ async function load() {
     if (month) params.set('month', month);
   }
   const data = await api('/api/stats?' + params.toString());
+  lastStatsData = data;
 
   const yearSelect = document.getElementById('f-year');
   if (!yearSelect.dataset.filled) {
@@ -94,6 +124,17 @@ function clearDay() {
   document.getElementById('f-day').value = '';
   load();
 }
+function exportStatsCsv() {
+  if (!lastStatsData) return;
+  const rows = [['Sorte', 'Stück', 'Erlös (EUR)']];
+  lastStatsData.byFlavor.forEach((g) => {
+    rows.push([g.name, g.flavorId === '__discount__' ? '' : g.units, g.revenue.toFixed(2).replace('.', ',')]);
+  });
+  rows.push([]);
+  rows.push(['Gesamt Stück', lastStatsData.totalUnits, '']);
+  rows.push(['Gesamterlös (EUR)', '', lastStatsData.totalRevenue.toFixed(2).replace('.', ',')]);
+  downloadCsv(`eisstation-statistik-${lastStatsData.label}.csv`, toCsv(rows));
+}
 
 // Zeitgrenzen im Browser berechnen (nicht im Backend), damit die tatsaechliche
 // Zeitzone des Standorts zaehlt statt der des Render-Servers - identisches
@@ -111,35 +152,53 @@ function computeBounds(year, month, day) {
   return { start: new Date(y, 0, 1).getTime(), end: new Date(y + 1, 0, 1).getTime() };
 }
 
+let lastFetchedOrders = [];
+let lastFetchedFlavors = [];
+
 async function loadOrders() {
   const year = document.getElementById('o-year').value;
   const month = document.getElementById('o-month').value;
   const day = document.getElementById('o-day').value;
   const { start, end } = computeBounds(year, month, day);
 
-  let flavors = [];
-  let orders = [];
   try {
-    [flavors, orders] = await Promise.all([
+    const [flavors, orders] = await Promise.all([
       api('/api/flavors'),
       api(`/api/orders?since=${start}&until=${end}`),
     ]);
+    lastFetchedFlavors = flavors;
+    lastFetchedOrders = orders;
   } catch (e) {
     document.getElementById('orders-list').innerHTML = '<p class="small">Fehler beim Laden.</p>';
     return;
   }
+  renderOrdersList();
+}
+
+function orderSummary(o, flavors) {
+  const groups = {};
+  o.items.forEach((i) => {
+    if (!groups[i.flavorId]) groups[i.flavorId] = { qty: 0, flavor: flavors.find((f) => f.id === i.flavorId) };
+    groups[i.flavorId].qty += i.qty;
+  });
+  return Object.values(groups).map((g) => `${g.qty}x ${g.flavor ? g.flavor.name : '?'}`).join(', ');
+}
+
+// Filtert die bereits geladene (nach Zeitraum eingeschraenkte) Liste im
+// Browser nach Bestellnummer oder Telefonnummer - kein erneuter Serveraufruf
+// noetig, da schon alles fuer den gewaehlten Zeitraum vorliegt.
+function renderOrdersList() {
+  const search = document.getElementById('o-search').value.trim().toLowerCase();
+  const orders = search
+    ? lastFetchedOrders.filter((o) => o.id.toLowerCase().includes(search) || (o.phone && o.phone.toLowerCase().includes(search)))
+    : lastFetchedOrders;
 
   const el = document.getElementById('orders-list');
   el.innerHTML = orders.length
     ? orders
         .map((o) => {
           const status = deriveOrderStatus(o);
-          const groups = {};
-          o.items.forEach((i) => {
-            if (!groups[i.flavorId]) groups[i.flavorId] = { qty: 0, flavor: flavors.find((f) => f.id === i.flavorId) };
-            groups[i.flavorId].qty += i.qty;
-          });
-          const summary = Object.values(groups).map((g) => `${g.qty}x ${g.flavor ? g.flavor.name : '?'}`).join(', ');
+          const summary = orderSummary(o, lastFetchedFlavors);
           return `
         <div class="row card">
           <span>
@@ -155,7 +214,27 @@ async function loadOrders() {
         </div>`;
         })
         .join('')
-    : '<p class="small">Keine Bestellungen in diesem Zeitraum.</p>';
+    : `<p class="small">${search ? 'Keine Treffer für diese Suche.' : 'Keine Bestellungen in diesem Zeitraum.'}</p>`;
+}
+
+function exportOrdersCsv() {
+  const search = document.getElementById('o-search').value.trim().toLowerCase();
+  const orders = search
+    ? lastFetchedOrders.filter((o) => o.id.toLowerCase().includes(search) || (o.phone && o.phone.toLowerCase().includes(search)))
+    : lastFetchedOrders;
+
+  const rows = [['Bestellnummer', 'Datum/Uhrzeit', 'Artikel', 'Gesamtpreis (EUR)', 'Telefonnummer', 'Status']];
+  orders.forEach((o) => {
+    rows.push([
+      o.id,
+      fmtDateTime(o.createdAt),
+      orderSummary(o, lastFetchedFlavors),
+      orderTotal(o).toFixed(2).replace('.', ','),
+      o.phone || '',
+      statusMeta(deriveOrderStatus(o)).label,
+    ]);
+  });
+  downloadCsv('eisstation-bestellungen.csv', toCsv(rows));
 }
 function clearOrderDay() {
   document.getElementById('o-day').value = '';
@@ -168,6 +247,7 @@ document.getElementById('f-day').addEventListener('change', load);
 document.getElementById('o-year').addEventListener('change', loadOrders);
 document.getElementById('o-month').addEventListener('change', loadOrders);
 document.getElementById('o-day').addEventListener('change', loadOrders);
+document.getElementById('o-search').addEventListener('input', renderOrdersList);
 
 document.addEventListener('eisstation:themechange', () => {
   load();
