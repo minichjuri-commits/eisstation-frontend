@@ -66,22 +66,30 @@ async function loadColumn(side, machineId) {
                 const f = flavors.find((fl) => fl.id === i.flavorId);
                 return `
         <div class="panel-alt ticket">
-          <div class="row"><span class="font-mono" style="font-weight:600;">${i.orderId}</span>${pillHtml(i.status)}</div>
-          ${i.orderItemCount > 1 ? `<p class="small">Teil von ${i.orderItemCount} Artikeln</p>` : ''}
-          <div class="row" style="margin:6px 0;justify-content:flex-start;"><span class="dot" style="background:${f ? f.color : '#888'};width:9px;height:9px;"></span>&nbsp;${escapeHtml(f ? f.name : '?')}</div>
-          <div class="row small" style="margin-bottom:6px;">
+          <div class="row" style="align-items:flex-start;">
+            <div style="min-width:0;">
+              <div class="row" style="gap:7px;justify-content:flex-start;">
+                <span class="dot" style="background:${f ? f.color : '#888'};width:12px;height:12px;flex-shrink:0;"></span>
+                <span style="font-size:18px;font-weight:700;">${escapeHtml(f ? f.name : '?')}</span>
+              </div>
+              <span class="font-mono small" style="color:var(--text-dim);">${i.orderId}</span>
+            </div>
+            ${pillHtml(i.status)}
+          </div>
+          ${i.orderItemCount > 1 ? `<p class="small" style="margin-top:4px;">Teil von ${i.orderItemCount} Artikeln</p>` : ''}
+          <div class="row small" style="margin:8px 0 6px;">
             <span>${elapsed(i.orderCreatedAt)}</span>
             ${i.phone ? '<span>📞</span>' : ''}
           </div>
-          <div class="row" style="gap:6px;margin-bottom:6px;">
+          <div class="row" style="gap:6px;margin-bottom:8px;">
             <select onchange="reassign('${i.orderId}','${i.itemId}',this.value,'${side}',${machineId})" style="flex:1;font-size:12px;">
               ${moveOptions.map((m) => `<option value="${m.id}" ${m.id === i.machine ? 'selected' : ''}>${escapeHtml(m.name)}${!m.active ? ' (aus)' : ''}</option>`).join('')}
             </select>
           </div>
-          <div class="row" style="gap:6px;">
-            <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1;padding:8px;" onclick="advance('${i.orderId}','${i.itemId}','${side}',${machineId})">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
-            <button class="btn btn-ghost" style="padding:8px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button>
-            <button class="btn btn-ghost" style="padding:8px;" onclick="cancelItem('${i.orderId}','${i.itemId}','${side}',${machineId})">✕</button>
+          <div class="row" style="gap:6px;justify-content:flex-start;">
+            <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="padding:6px 14px;font-size:13px;" onclick="advance('${i.orderId}','${i.itemId}','${side}',${machineId})">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
+            <button class="btn btn-ghost" style="padding:6px 10px;font-size:13px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button>
+            <button class="btn btn-ghost" style="padding:6px 10px;font-size:13px;" onclick="cancelItem('${i.orderId}','${i.itemId}','${side}',${machineId})">✕</button>
           </div>
         </div>`;
               })
