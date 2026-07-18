@@ -51,11 +51,10 @@
     <p class="small">Bestellung aufgenommen</p>
     <p class="font-mono" style="font-size:24px;font-weight:600;margin:4px 0;" id="qr-order-id"></p>
     <p class="font-mono small" id="qr-order-total"></p>
-    <div style="background:#fff;width:160px;height:160px;margin:12px auto;display:flex;align-items:center;justify-content:center;border-radius:6px;">
-      <img id="qr-image" width="150" height="150" alt="QR Code" />
+    <div style="background:#fff;width:160px;height:160px;margin:12px auto;display:flex;align-items:center;justify-content:center;border-radius:6px;cursor:pointer;" onclick="document.getElementById('qr-image').click()">
+      <img id="qr-image" width="150" height="150" alt="QR Code" style="cursor:pointer;" />
     </div>
-    <p class="small">Kunde scannt den Code, gibt seine Telefonnummer ein und erhält per SMS eine Bestellbestätigung sowie eine Nachricht bei Fertigstellung.</p>
-    <p class="small font-mono" style="word-break:break-all;"><a id="qr-link" href="#" target="_blank" rel="noopener"></a></p>
+    <p class="small">Kunde scannt den Code, gibt seine Telefonnummer ein und erhält per SMS eine Bestellbestätigung sowie eine Nachricht bei Fertigstellung. Zum Testen: QR-Code anklicken, um die Bestellverfolgung direkt zu öffnen.</p>
     <button class="btn btn-amber" style="width:100%;margin-top:8px;" onclick="document.getElementById('qr-modal').classList.add('hidden')">Schließen</button>
   </div>
 </div>

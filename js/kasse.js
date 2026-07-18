@@ -228,8 +228,7 @@ function showQrModal(order, qrImageUrl, qrTargetUrl) {
   document.getElementById('qr-order-id').textContent = order.id;
   document.getElementById('qr-order-total').textContent = euro(orderTotal(order));
   document.getElementById('qr-image').src = API_BASE + qrImageUrl + '?t=' + Date.now();
-  document.getElementById('qr-link').href = qrTargetUrl;
-  document.getElementById('qr-link').textContent = qrTargetUrl;
+  document.getElementById('qr-image').onclick = () => window.open(qrTargetUrl, '_blank', 'noopener');
   document.getElementById('qr-modal').classList.remove('hidden');
 }
 
@@ -441,7 +440,7 @@ function renderDetail(order) {
   const status = deriveOrderStatus(order);
   document.getElementById('detail-body').innerHTML = `
     <div class="row"><span class="font-mono" style="font-size:20px;font-weight:600;">${order.id}</span>${pillHtml(status)}</div>
-    <img src="${API_BASE}/api/public/orders/${order.id}/qrcode.png?t=${Date.now()}" width="140" height="140" style="background:#fff;border-radius:6px;display:block;margin:12px auto;" />
+    <img src="${API_BASE}/api/public/orders/${order.id}/qrcode.png?t=${Date.now()}" width="140" height="140" style="background:#fff;border-radius:6px;display:block;margin:12px auto;cursor:pointer;" title="Klicken, um die Bestellverfolgung zu öffnen" onclick="window.open('${location.origin}/order/${order.id}-${order.token}', '_blank', 'noopener')" />
     <div class="stack" style="margin:12px 0;">
       ${order.items
         .map((i) => {

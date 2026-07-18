@@ -66,10 +66,10 @@ async function load() {
             ${opts.map((m) => `<option value="${m.id}" ${m.id === i.machine ? 'selected' : ''}>${escapeHtml(m.name)}${!m.active ? ' (aus)' : ''}</option>`).join('')}
           </select>
         </div>
-        <div class="row" style="gap:8px;">
-          <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1;" onclick="advance('${i.orderId}','${i.itemId}')">${i.status === 'offen' ? 'Bearbeitung starten' : 'Als fertig markieren'}</button>
-          <button class="btn btn-ghost" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}')">↺</button>
-          <button class="btn btn-ghost" onclick="cancelItem('${i.orderId}','${i.itemId}')">Stornieren</button>
+        <div class="row" style="gap:6px;flex-wrap:wrap;">
+          <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1 1 auto;min-width:100px;padding:9px 14px;" onclick="advance('${i.orderId}','${i.itemId}')">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
+          <button class="btn btn-ghost" style="padding:9px 13px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}')">↺</button>
+          <button class="btn btn-ghost" style="padding:9px 13px;" title="Stornieren" onclick="cancelItem('${i.orderId}','${i.itemId}')">✕</button>
         </div>
       </div>`;
         })
@@ -80,7 +80,10 @@ async function load() {
     done
       .map((i) => {
         const f = flavors.find((fl) => fl.id === i.flavorId);
-        return `<div class="row card"><span class="font-mono">${i.orderId}</span> <span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 8px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}')">↺</button></div>`;
+        return `<div class="row card">
+          <span class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span class="font-mono">${i.orderId}</span> ${escapeHtml(f ? f.name : '?')}</span>
+          <span class="row" style="gap:6px;width:auto;flex-shrink:0;">${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 8px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}')">↺</button></span>
+        </div>`;
       })
       .join('') || '<p class="small">Noch nichts fertiggestellt.</p>';
 }

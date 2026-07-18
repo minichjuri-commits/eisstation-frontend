@@ -86,10 +86,10 @@ async function loadColumn(side, machineId) {
               ${moveOptions.map((m) => `<option value="${m.id}" ${m.id === i.machine ? 'selected' : ''}>${escapeHtml(m.name)}${!m.active ? ' (aus)' : ''}</option>`).join('')}
             </select>
           </div>
-          <div class="row" style="gap:6px;justify-content:flex-start;">
-            <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="padding:6px 14px;font-size:13px;" onclick="advance('${i.orderId}','${i.itemId}','${side}',${machineId})">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
-            <button class="btn btn-ghost" style="padding:6px 10px;font-size:13px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button>
-            <button class="btn btn-ghost" style="padding:6px 10px;font-size:13px;" onclick="cancelItem('${i.orderId}','${i.itemId}','${side}',${machineId})">✕</button>
+          <div class="row" style="gap:6px;justify-content:flex-start;flex-wrap:wrap;">
+            <button class="btn ${i.status === 'offen' ? 'btn-amber' : 'btn-green'}" style="flex:1 1 auto;min-width:90px;padding:9px 14px;font-size:14px;" onclick="advance('${i.orderId}','${i.itemId}','${side}',${machineId})">${i.status === 'offen' ? 'Starten' : 'Fertig'}</button>
+            <button class="btn btn-ghost" style="padding:9px 13px;font-size:14px;" title="Einen Schritt zurück" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button>
+            <button class="btn btn-ghost" style="padding:9px 13px;font-size:14px;" title="Stornieren" onclick="cancelItem('${i.orderId}','${i.itemId}','${side}',${machineId})">✕</button>
           </div>
         </div>`;
               })
@@ -102,7 +102,10 @@ async function loadColumn(side, machineId) {
         done
           .map((i) => {
             const f = flavors.find((fl) => fl.id === i.flavorId);
-            return `<div class="row card"><span class="font-mono small">${i.orderId}</span><span class="small">${escapeHtml(f ? f.name : '?')}</span>${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 6px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button></div>`;
+            return `<div class="row card">
+              <span class="small" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><span class="font-mono">${i.orderId}</span> ${escapeHtml(f ? f.name : '?')}</span>
+              <span class="row" style="gap:6px;width:auto;flex-shrink:0;">${pillHtml('fertig')}<button class="btn btn-ghost" style="padding:2px 6px;" title="Zurück auf 'wird zubereitet'" onclick="revert('${i.orderId}','${i.itemId}','${side}',${machineId})">↺</button></span>
+            </div>`;
           })
           .join('') || '<p class="small">Noch nichts fertig.</p>'
       }
